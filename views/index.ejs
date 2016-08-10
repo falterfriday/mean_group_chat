@@ -1,10 +1,79 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
+<head>
+	<meta charset="utf-8">
     <title>Group Chat</title>
-  </head>
-  <body>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  	<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+	<script type="text/javascript">
+		var socket = io.connect();
+		var current_user;
+		$(document).ready(function(){
+			function newUser(){
+				var name = prompt("Please enter your name");
+				current_user = name;
+				console.log(current_user);
+				socket.on('message_data', function(messages){
+					for (var i = 0; i< messages.length; i++){
+						$('#board').append('<p>' +messages[i].name+': '+messages[i].message+'</p>')
+					}
+				$("#board").scrollTop($("#board")[0].scrollHeight);
+				})
+			}
+			newUser();
+			$('#submit').click(function(){
+				socket.emit('new_message', { name: current_user, message: $('#message').val() } );
+				$('#message').val('');
+				$("#board").scrollTop($("#board")[0].scrollHeight);
+				return false;
+			})
+			socket.on('single_message', function(data){
+				console.log(data[data.length-1]);
+				$('#board').append('<p>' +data[data.length-1].name+': '+data[data.length-1].message+'</p>').hide().fadeIn();
+				$("#board").scrollTop($("#board")[0].scrollHeight);
+			})
 
-  </body>
+		});
+	</script>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/foundation/6.2.1/foundation.min.css">
+	<style media="screen">
+		#wrapper {
+			width:90%;
+			height: auto;
+			border-radius: 15px;
+			margin:auto;
+			padding:10px;
+		}
+		h3 {
+			color: rgb(89, 89, 89);
+		}
+		#board {
+			background: linear-gradient(to right, rgba(0,0,0,0) 0%,rgba(0,0,0,0.65) 100%);
+			height: 200px;;
+			width: 100%;
+			border: solid black 1px;
+			overflow: scroll;
+			margin:auto;
+		}
+		p {
+			font-size: 0.9em;
+			margin: 5px;
+		}
+		#message {
+			width: 100%;
+			margin: auto;
+		}
+		#submit {
+			float: right;
+		}
+	</style>
+</head>
+<body>
+	<div id="wrapper" class="panel clearfix">
+	<h3><u>Conversation Board</u></h3>
+		<div id="board"></div><br>
+		<input id="message" type="text" name="name" placeholder="Type your message here" autofocus><br>
+		<input id="submit" class="button" type="button" value="Send">
+	</div>
+</body>
 </html>
